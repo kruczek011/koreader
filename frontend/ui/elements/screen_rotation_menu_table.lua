@@ -33,10 +33,14 @@ return {
 
         if Device:hasGSensor() then
             table.insert(rotation_table, {
-                text = _("Ignore accelerometer rotation events"),
+                text = Device:isAndroid() and _("Auto-rotation") or _("Ignore accelerometer rotation events"),
                 help_text = _("This will inhibit automatic rotations triggered by your device's gyro."),
                 checked_func = function()
-                    return G_reader_settings:isTrue("input_ignore_gsensor")
+                    local ignored = G_reader_settings:isTrue("input_ignore_gsensor")
+                    if Device:isAndroid() then
+                        return not ignored
+                    end
+                    return ignored
                 end,
                 callback = function()
                     UIManager:broadcastEvent(Event:new("ToggleGSensor"))
