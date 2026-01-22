@@ -80,7 +80,7 @@ local Device = Generic:extend{
     hasSeamlessWifiToggle = no, -- Requires losing focus to the sytem's network settings and user interaction
     hasExitOptions = no,
     hasEinkScreen = function() return android.isEink() end,
-    hasColorScreen = android.isColorScreen() and yes or no,
+    hasColorScreen = android.isColorScreen,
     hasFrontlight = android.hasLights,
     hasNaturalLight = android.isWarmthDevice,
     canRestart = no,
@@ -117,6 +117,9 @@ local Device = Generic:extend{
             android.dictLookup(text, app, action)
         end
     end,
+
+    -- Enable GSensor menu for Android
+    hasGSensor = yes,
 }
 
 function Device:otaModel()
@@ -595,6 +598,29 @@ function Device:getDefaultCoverPath()
         return android.getExternalStoragePath() .. "/suspend_others.jpg"
     else
         return android.getExternalStoragePath() .. "/cover.jpg"
+    end
+end
+
+-- Android specific method for toggling the GSensor
+function Device:toggleGSensor(toggle)
+    if not self:hasGSensor() then
+        return
+    end
+
+    -- Values for android.setScreenOrientation:
+    -- 4: SCREEN_ORIENTATION_SENSOR (Auto)
+    -- 1: SCREEN_ORIENTATION_PORTRAIT (Locked Portrait)
+    -- 0: SCREEN_ORIENTATION_LANDSCAPE (Locked Landscape)
+    if toggle then
+        android.setScreenOrientation(4) -- SENSOR
+    else
+        -- When disabling, we lock it to current orientation
+        local rotation = self.screen:getRotationMode()
+        if rotation == 0 or rotation == 2 then
+            android.setScreenOrientation(1) -- PORTRAIT
+        else
+            android.setScreenOrientation(0) -- LANDSCAPE
+        end
     end
 end
 
